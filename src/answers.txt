@@ -1,0 +1,8 @@
+To do:
+include your name/ID,
+practice answers, 
+a list of acceptance tests you ran, 
+any known defects, 
+and a brief explanation of references, dt, narrowing, and compiler-versus-runtime errors. 
+Include two screenshots: all three circles visible and an invalid speed message.
+Record any AI assistance and how you checked it.
