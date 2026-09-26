@@ -13,7 +13,7 @@
 
         canvas {
             display: block;
-            max-width: auto;
+            max-width: 100%;
             height: auto;
             background: #f3f4f6;
             margin: 12px 0;
@@ -21,7 +21,8 @@
         }
 
         button,
-        input {
+        input,
+        select {
             margin-right: 12px;
         }
     </style>
@@ -29,20 +30,32 @@
 
 <body>
     <h1>Interactive Circle</h1>
-    <label for="color">Circle color</label>
-    <input id="color" type="color" value="#2563eb">
-    <button id="toggle" type="button">Pause</button>
-    <button id="reset" type="button">Reset</button>
-    <canvas id="scene" width="640" height="360" aria-label="An animated circle">
-        This example requires a browser with canvas support.
-    </canvas>
+
+    <label for="selected">Selected circle</label>
     <select id="selected">
         <option value="0">Circle 1</option>
         <option value="1">Circle 2</option>
         <option value="2">Circle 3</option>
+        <option value="3">Circle 4</option>
+
     </select>
+
+    <label for="color">Circle color</label>
+    <input id="color" type="color" value="#2563eb">
+
+    <label for="speed">Horizontal speed</label>
+    <input id="speed" type="number" min="0" step="any" value="120">
+    <button id="applySpeed" type="button">Apply</button>
+
+    <button id="toggle" type="button">Pause</button>
+    <button id="reset" type="button">Reset</button>
+
+    <canvas id="scene" width="640" height="360" aria-label="An animated circle">
+        This example requires a browser with canvas support.
+    </canvas>
+
     <p id="status"></p>
-    <p>Click or touch to place the circle. Use the controls above.</p>
+    <p>Click or touch to place the selected circle. Use the controls above.</p>
     <script type="module" src="./dist/main.js"></script>
 </body>
 

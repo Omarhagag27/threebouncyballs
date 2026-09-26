@@ -1,5 +1,4 @@
 // console.log("Typescript is ready")
-
 interface Circle {
     x: number;
     y: number;
@@ -8,6 +7,7 @@ interface Circle {
     vx: number;
     vy: number;
 }
+
 function start(): void {
     const canvas = document.getElementById("scene");
     const color = document.getElementById("color");
@@ -15,79 +15,165 @@ function start(): void {
     const reset = document.getElementById("reset");
     const status = document.getElementById("status");
     const select = document.getElementById("selected");
+    const speed = document.getElementById("speed");
+    const applySpeed = document.getElementById("applySpeed");
+
     if (!(canvas instanceof HTMLCanvasElement) ||
         !(color instanceof HTMLInputElement) ||
         !(toggle instanceof HTMLButtonElement) ||
         !(reset instanceof HTMLButtonElement) ||
         !(status instanceof HTMLParagraphElement) ||
-        !(select instanceof HTMLSelectElement)) {
+        !(select instanceof HTMLSelectElement) ||
+        !(speed instanceof HTMLInputElement) ||
+        !(applySpeed instanceof HTMLButtonElement)) {
         throw new Error("Required page elements are missing");
     }
+
     const ctx = canvas.getContext("2d");
-    if (ctx === null) throw new Error("Canvas 2D is unavailable");
+    if (ctx === null) {
+        throw new Error("Canvas 2D is unavailable");
+    }
+
     const initial: Circle[] = [
-        {x: 80, y: 180, radius: 20, color: "#2563eb", vx: 120, vy: 120}
-        {x: 100, y: 100, radius: 20, color: "#49eb25", vx: 120, vy: 120}
-        {x: 300, y: 200, radius: 20, color: "#ebdb25", vx: 120, vy: 120}
+        { x: 80, y: 80, radius: 20, color: "#2563eb", vx: 45, vy: 80 },
+        { x: 320, y: 320, radius: 20, color: "#49eb25", vx: -100, vy: -120 },
+        { x: 200, y: 200, radius: 20, color: "#ebdb25", vx: 120, vy: -80 }
     ];
-    const circle: Circle = { ...initial };
+
+    let circles: Circle[] = initial.map((circle) => ({ ...circle }));
+    
+    let selectedIndex = 0;
     let running = true;
-    const clamp = (v: number, low: number, high: number): number =>
-        Math.max(low, Math.min(v, high));
+
+    const clamp = (value: number, low: number, high: number): number =>
+        Math.max(low, Math.min(value, high));
+
+    const getSelectedCircle = (): Circle | undefined =>
+        circles[selectedIndex];
+
+    const checkselectedcircle = (): void => { //checks and syncs
+        const selectedCircle = getSelectedCircle();
+        if (selectedCircle === undefined) {
+            return;
+        }
+
+        color.value = selectedCircle.color;
+        speed.value = String(Math.abs(selectedCircle.vx));
+    };
+
     const draw = (): void => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = circle.color;
-        ctx.beginPath();
-        ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
-        ctx.fill();
+
+        for (const circle of circles) {
+            ctx.fillStyle = circle.color;
+            ctx.beginPath();
+            ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        const selectedCircle = getSelectedCircle();
+        if (selectedCircle === undefined) {
+            status.textContent =
+                `No circle selected | ${running ? "running" : "paused"}`;
+            return;
+        }
+
         status.textContent =
-            `x=${circle.x.toFixed(1)}, y=${circle.y.toFixed(1)} ` +
-            `| ${running ? "running" : "paused"}`;
+            `Circle ${selectedIndex + 1}: ` +
+            `x=${selectedCircle.x.toFixed(1)}, ` +
+            `y=${selectedCircle.y.toFixed(1)} | ` +
+            `${running ? "running" : "paused"}`;
     };
 
     color.addEventListener("input", () => {
-        circle.color = color.value;
+        const selectedCircle = getSelectedCircle();
+        if (selectedCircle === undefined) {
+            return;
+        }
+
+        selectedCircle.color = color.value;
     });
+
+    select.addEventListener("change", () => {
+        selectedIndex = Number(select.value);
+        checkselectedcircle();
+    });
+
+    applySpeed.addEventListener("click", () => {
+        const selectedCircle = getSelectedCircle();
+        if (selectedCircle === undefined) {
+            return;
+        }
+
+        const rawValue = speed.value.trim();
+        const value = Number(rawValue);
+
+        if (rawValue === "" || !Number.isFinite(value) || value < 0) {
+            speed.value = String(Math.abs(selectedCircle.vx));
+            return;
+        }
+
+        const direction = selectedCircle.vx < 0 ? -1 : 1;
+        selectedCircle.vx = value * direction;
+    });
+
     toggle.addEventListener("click", () => {
         running = !running;
         toggle.textContent = running ? "Pause" : "Resume";
     });
+
     reset.addEventListener("click", () => {
-        Object.assign(circle, initial);
-        color.value = initial.color;
+        circles = initial.map((circle) => ({ ...circle }));
+        selectedIndex = 0;
+        select.value = `0`;
         running = false;
         toggle.textContent = "Resume";
+        checkselectedcircle();
     });
+
     canvas.addEventListener("pointerdown", (event) => {
+        const selectedCircle = getSelectedCircle();
+        if (selectedCircle === undefined) {
+            return;
+        }
+
         const bounds = canvas.getBoundingClientRect();
         const x = (event.clientX - bounds.left) *
             canvas.width / bounds.width;
         const y = (event.clientY - bounds.top) *
             canvas.height / bounds.height;
-        circle.x = clamp(x, circle.radius, canvas.width - circle.radius);
-        circle.y = clamp(y, circle.radius, canvas.height - circle.radius);
+
+        selectedCircle.x = clamp(x, selectedCircle.radius, canvas.width - selectedCircle.radius);
+        selectedCircle.y = clamp(y, selectedCircle.radius, canvas.height - selectedCircle.radius);
     });
+
     let previous: number | undefined;
+
     const frame = (now: number): void => {
-        const dt = previous === undefined ? 0 :
-            Math.min((now - previous) / 1000, 0.05);
+        const dt = previous === undefined? 0
+            : Math.min((now - previous) / 1000, 0.05);
         previous = now;
+
         if (running) {
-            circle.x += circle.vx * dt;
-            circle.y += circle.vy * dt;
-            if (circle.x > canvas.width - circle.radius) {
-                circle.x = canvas.width - circle.radius;
-                circle.vx = -Math.abs(circle.vx);
-            } else if (circle.x < circle.radius) {
-                circle.x = circle.radius;
-                circle.vx = Math.abs(circle.vx);
-            }
-            if (circle.y > canvas.height - circle.radius) {
-                circle.y = canvas.height - circle.radius;
-                circle.vy = -Math.abs(circle.vy);
-            } else if (circle.y < circle.radius) {
-                circle.y = circle.radius;
-                circle.vy = Math.abs(circle.vy);
+            for (const circle of circles) {
+                circle.x += circle.vx * dt;
+                circle.y += circle.vy * dt;
+
+                if (circle.x > canvas.width - circle.radius) {
+                    circle.x = canvas.width - circle.radius;
+                    circle.vx = -Math.abs(circle.vx);
+                } else if (circle.x < circle.radius) {
+                    circle.x = circle.radius;
+                    circle.vx = Math.abs(circle.vx);
+                }
+
+                if (circle.y > canvas.height - circle.radius) {
+                    circle.y = canvas.height - circle.radius;
+                    circle.vy = -Math.abs(circle.vy);
+                } else if (circle.y < circle.radius) {
+                    circle.y = circle.radius;
+                    circle.vy = Math.abs(circle.vy);
+                }
             }
         }
         draw();
