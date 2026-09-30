@@ -1,5 +1,6 @@
 To do:
-include your name/ID,
+student name: omar hagag rabie
+id: 1620240484
 practice answers, 
 a list of acceptance tests you ran, 
 any known defects, 

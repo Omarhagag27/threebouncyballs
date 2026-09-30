@@ -17,6 +17,7 @@ function start(): void {
     const select = document.getElementById("selected");
     const speed = document.getElementById("speed");
     const applySpeed = document.getElementById("applySpeed");
+    const warn = document.getElementById("warn");
 
     if (!(canvas instanceof HTMLCanvasElement) ||
         !(color instanceof HTMLInputElement) ||
@@ -25,7 +26,8 @@ function start(): void {
         !(status instanceof HTMLParagraphElement) ||
         !(select instanceof HTMLSelectElement) ||
         !(speed instanceof HTMLInputElement) ||
-        !(applySpeed instanceof HTMLButtonElement)) {
+        !(applySpeed instanceof HTMLButtonElement) ||
+        !(warn instanceof HTMLParagraphElement)) {
         throw new Error("Required page elements are missing");
     }
 
@@ -110,8 +112,11 @@ function start(): void {
 
         if (rawValue === "" || !Number.isFinite(value) || value < 0) {
             speed.value = String(Math.abs(selectedCircle.vx));
+            warn.textContent = "invalid speed!, Enter valid speed.";
             return;
         }
+        else
+            warn.textContent = " ";
 
         const direction = selectedCircle.vx < 0 ? -1 : 1;
         selectedCircle.vx = value * direction;
